@@ -285,12 +285,12 @@ export default function GridMapApp() {
         <div
           className="grid"
           style={{
-            gridTemplateColumns: `repeat(${X_MAX - X_MIN + 1}, minmax(3px, 1fr))`,
-            width: 'fit-content',
+            gridTemplateColumns: `repeat(${X_MAX - X_MIN + 1}, 10px)`,
+            width: `${(X_MAX - X_MIN + 1) * 10}px`,
           }}
         >
-          {gridRows}
-        </div>
+        {gridRows}
+      </div>
       </div>
     </div>
   );
