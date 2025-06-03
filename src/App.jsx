@@ -276,6 +276,7 @@ export default function GridMapApp() {
             value={jsonData}
             onChange={(e) => setJsonData(e.target.value)}
           />
+           <p className="text-center text-gray-500 text-xs pt-4">Built by Radix</p>
         </div>
       </div>
 
