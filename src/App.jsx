@@ -13,16 +13,18 @@ export default function GridMapApp() {
     y: '',
     ally: false,
     enemy: false,
+    defender: false,
   });
   const [jsonData, setJsonData] = useState('');
 
   const pointColorMap = useMemo(() => {
     const map = new Map();
-    points.forEach(({ x, y, ally, enemy, name }) => {
+    points.forEach(({ x, y, ally, enemy, defender, name }) => {
       const key = `${x},${y}`;
       let color = 'white';
       if (enemy) color = 'red';
       else if (ally) color = 'blue';
+      else if (defender) color = 'green';      
       map.set(key, { color, name });
     });
     return map;
@@ -33,10 +35,14 @@ export default function GridMapApp() {
     setForm((prev) => {
       if (type === 'checkbox') {
         if (name === 'ally' && checked) {
-          return { ...prev, ally: true, enemy: false };
+          return { ...prev, ally: true, enemy: false , defender:false};
         }
         if (name === 'enemy' && checked) {
-          return { ...prev, enemy: true, ally: false };
+          return { ...prev, enemy: true, ally: false, defender: false };
+        }
+
+         if (name === 'defender' && checked) {
+          return { ...prev, enemy: false, ally: false, defender: true };
         }
         return { ...prev, [name]: checked };
       }
@@ -69,9 +75,10 @@ export default function GridMapApp() {
         y,
         ally: form.ally,
         enemy: form.enemy,
+        defender: form.defender,
       },
     ]);
-    setForm((prev) => ({ ...prev, name: '', x: '', y: '', ally: false, enemy: false }));
+    setForm((prev) => ({ ...prev, name: '', x: '', y: '', ally: false, enemy: false , defender: false}));
   };
 
   const handleRemove = (id) => {
@@ -80,7 +87,7 @@ export default function GridMapApp() {
 
   const exportJson = () => {
     const line = points
-      .map((p) => `${p.name}|${p.x}|${p.y}|${p.ally ? 'A' : p.enemy ? 'E' : 'N'}`)
+      .map((p) => `${p.name}|${p.x}|${p.y}|${p.ally ? 'A' : p.enemy ? 'E' : p.defender ? 'D' :'N'}`)
       .join(',');
     setJsonData(line);
   };
@@ -98,6 +105,7 @@ export default function GridMapApp() {
             y: parseInt(y, 10),
             ally: type === 'A',
             enemy: type === 'E',
+            defender: type == 'D',
           };
         });
       setPoints(parsed);
@@ -133,6 +141,32 @@ export default function GridMapApp() {
     }
     return rows.flat();
   }, [pointColorMap]);
+
+
+function QuickAddButton({ label, x, y, onAdd }) {
+  const handleClick = () => {
+    onAdd({
+      id: crypto.randomUUID(),
+      name: label,
+      x,
+      y,
+      ally: true,
+      enemy: false,
+      defender: false,
+    });
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded space-y-4 overflow-y-auto"
+    >
+      {label}
+    </button>
+  );
+}
+
 
   return (
     <div className="flex h-screen w-screen font-sans text-sm">
@@ -196,6 +230,15 @@ export default function GridMapApp() {
               />
               Enemy
             </label>
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                name="defender"
+                checked={form.defender}
+                onChange={handleChange}
+              />
+              Defender
+            </label>
           </div>
           <button
             type="submit"
@@ -223,7 +266,7 @@ export default function GridMapApp() {
                 <td className="p-1 border text-right">{p.x}</td>
                 <td className="p-1 border text-right">{p.y}</td>
                 <td className="p-1 border capitalize">
-                  {p.enemy ? 'enemy' : p.ally ? 'ally' : 'neutral'}
+                  {p.enemy ? 'enemy' : p.ally ? 'ally' : p.defender ? 'defender': 'neutral'}
                 </td>
                 <td className="p-1 border">
                   <button
@@ -276,8 +319,9 @@ export default function GridMapApp() {
             value={jsonData}
             onChange={(e) => setJsonData(e.target.value)}
           />
-           <p className="text-center text-gray-500 text-xs pt-4">Built by Radix</p>
+           
         </div>
+      <p className="text-center text-gray-500 text-xs pt-4">Built by Radix</p>        
       </div>
 
       <div className="flex-1 overflow-auto p-4">
