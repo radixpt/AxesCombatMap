@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import GridCell from './GridCell'; // ✅ NEW IMPORT
 
 const X_MIN = -200;
 const X_MAX = 0;
@@ -16,6 +17,7 @@ export default function GridMapApp() {
     defender: false,
   });
   const [jsonData, setJsonData] = useState('');
+  const [showNames, setShowNames] = useState(true); 
 
   const pointColorMap = useMemo(() => {
     const map = new Map();
@@ -24,7 +26,7 @@ export default function GridMapApp() {
       let color = 'white';
       if (enemy) color = 'red';
       else if (ally) color = 'blue';
-      else if (defender) color = 'green';      
+      else if (defender) color = 'green';
       map.set(key, { color, name });
     });
     return map;
@@ -35,13 +37,12 @@ export default function GridMapApp() {
     setForm((prev) => {
       if (type === 'checkbox') {
         if (name === 'ally' && checked) {
-          return { ...prev, ally: true, enemy: false , defender:false};
+          return { ...prev, ally: true, enemy: false, defender: false };
         }
         if (name === 'enemy' && checked) {
           return { ...prev, enemy: true, ally: false, defender: false };
         }
-
-         if (name === 'defender' && checked) {
+        if (name === 'defender' && checked) {
           return { ...prev, enemy: false, ally: false, defender: true };
         }
         return { ...prev, [name]: checked };
@@ -78,7 +79,14 @@ export default function GridMapApp() {
         defender: form.defender,
       },
     ]);
-    setForm((prev) => ({ ...prev, name: '', x: '', y: '', ally: false, enemy: false , defender: false}));
+    setForm({
+      name: '',
+      x: '',
+      y: '',
+      ally: false,
+      enemy: false,
+      defender: false,
+    });
   };
 
   const handleRemove = (id) => {
@@ -87,27 +95,30 @@ export default function GridMapApp() {
 
   const exportJson = () => {
     const line = points
-      .map((p) => `${p.name}|${p.x}|${p.y}|${p.ally ? 'A' : p.enemy ? 'E' : p.defender ? 'D' :'N'}`)
+      .map(
+        (p) =>
+          `${p.name}|${p.x}|${p.y}|${
+            p.ally ? 'A' : p.enemy ? 'E' : p.defender ? 'D' : 'N'
+          }`
+      )
       .join(',');
     setJsonData(line);
   };
 
   const importJson = () => {
     try {
-      const parsed = jsonData
-        .split(',')
-        .map((entry) => {
-          const [name, x, y, type] = entry.split('|');
-          return {
-            id: crypto.randomUUID(),
-            name,
-            x: parseInt(x, 10),
-            y: parseInt(y, 10),
-            ally: type === 'A',
-            enemy: type === 'E',
-            defender: type == 'D',
-          };
-        });
+      const parsed = jsonData.split(',').map((entry) => {
+        const [name, x, y, type] = entry.split('|');
+        return {
+          id: crypto.randomUUID(),
+          name,
+          x: parseInt(x, 10),
+          y: parseInt(y, 10),
+          ally: type === 'A',
+          enemy: type === 'E',
+          defender: type === 'D',
+        };
+      });
       setPoints(parsed);
     } catch (e) {
       alert('Error parsing custom JSON format');
@@ -129,49 +140,35 @@ export default function GridMapApp() {
         const color = data?.color || 'white';
         const title = data?.name ? `${data.name} (${x}/${y})` : `${x}/${y}`;
         cells.push(
-          <div
+          <GridCell
             key={key}
-            className="w-3 h-3 border border-gray-200"
-            style={{ backgroundColor: color }}
+            color={color}
             title={title}
+            name={data?.name}
+            showName={showNames}
           />
         );
       }
       rows.push(cells);
     }
     return rows.flat();
-  }, [pointColorMap]);
-
-
-function QuickAddButton({ label, x, y, onAdd }) {
-  const handleClick = () => {
-    onAdd({
-      id: crypto.randomUUID(),
-      name: label,
-      x,
-      y,
-      ally: true,
-      enemy: false,
-      defender: false,
-    });
-  };
-
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded space-y-4 overflow-y-auto"
-    >
-      {label}
-    </button>
-  );
-}
-
+  }, [pointColorMap, showNames]); // ✅ include showNames
 
   return (
     <div className="flex h-screen w-screen font-sans text-sm">
       <div className="w-1/3 min-w-[260px] max-w-md border-r p-4 space-y-4 overflow-y-auto">
         <h1 className="text-xl font-semibold mb-2">Axes Combat Manager</h1>
+
+        {/* ✅ SHOW NAMES SWITCH */}
+        <label className="flex items-center gap-2 mb-2">
+          <input
+            type="checkbox"
+            checked={showNames}
+            onChange={(e) => setShowNames(e.target.checked)}
+          />
+          Show Player Names
+        </label>
+
         <form onSubmit={handleSubmit} className="space-y-2">
           <div>
             <label className="block">Player</label>
@@ -219,7 +216,7 @@ function QuickAddButton({ label, x, y, onAdd }) {
                 checked={form.ally}
                 onChange={handleChange}
               />
-              Ally
+              Attacker
             </label>
             <label className="flex items-center gap-1">
               <input
@@ -266,7 +263,13 @@ function QuickAddButton({ label, x, y, onAdd }) {
                 <td className="p-1 border text-right">{p.x}</td>
                 <td className="p-1 border text-right">{p.y}</td>
                 <td className="p-1 border capitalize">
-                  {p.enemy ? 'enemy' : p.ally ? 'ally' : p.defender ? 'defender': 'neutral'}
+                  {p.enemy
+                    ? 'enemy'
+                    : p.ally
+                    ? 'ally'
+                    : p.defender
+                    ? 'defender'
+                    : 'neutral'}
                 </td>
                 <td className="p-1 border">
                   <button
@@ -319,9 +322,8 @@ function QuickAddButton({ label, x, y, onAdd }) {
             value={jsonData}
             onChange={(e) => setJsonData(e.target.value)}
           />
-           
         </div>
-      <p className="text-center text-gray-500 text-xs pt-4">Built by Radix</p>        
+        <p className="text-center text-gray-500 text-xs pt-4">Built by Radix</p>
       </div>
 
       <div className="flex-1 overflow-auto p-4">
@@ -333,8 +335,8 @@ function QuickAddButton({ label, x, y, onAdd }) {
             width: `${(X_MAX - X_MIN + 1) * 10}px`,
           }}
         >
-        {gridRows}
-      </div>
+          {gridRows}
+        </div>
       </div>
     </div>
   );
