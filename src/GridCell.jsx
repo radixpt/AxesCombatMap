@@ -10,7 +10,7 @@ export default function GridCell({ color, title, name, showName }) {
     >
       {showName && name && (
         <span
-          className="absolute left-1/2 -translate-x-1/2 -top-4 text-[10px] text-black pointer-events-none"
+          className="absolute left-1/2 -translate-x-1/2 -top-6 text-[14px] text-black pointer-events-none"
           style={{ whiteSpace: 'nowrap' }}
         >
           {name}
