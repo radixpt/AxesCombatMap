@@ -17,7 +17,7 @@ export default function GridMapApp() {
     defender: false,
   });
   const [jsonData, setJsonData] = useState('');
-  const [showNames, setShowNames] = useState(true); 
+  const [showNames, setShowNames] = useState(true);
 
   const pointColorMap = useMemo(() => {
     const map = new Map();
@@ -105,9 +105,9 @@ export default function GridMapApp() {
     setJsonData(line);
   };
 
-  const importJson = () => {
+  const importJson = (data = jsonData) => {
     try {
-      const parsed = jsonData.split(',').map((entry) => {
+      const parsed = data.split(',').map((entry) => {
         const [name, x, y, type] = entry.split('|');
         return {
           id: crypto.randomUUID(),
@@ -152,14 +152,13 @@ export default function GridMapApp() {
       rows.push(cells);
     }
     return rows.flat();
-  }, [pointColorMap, showNames]); // ✅ include showNames
+  }, [pointColorMap, showNames]);
 
   return (
     <div className="flex h-screen w-screen font-sans text-sm">
       <div className="w-1/3 min-w-[260px] max-w-md border-r p-4 space-y-4 overflow-y-auto">
         <h1 className="text-xl font-semibold mb-2">Axes Combat Manager</h1>
 
-        {/* ✅ SHOW NAMES SWITCH */}
         <label className="flex items-center gap-2 mb-2">
           <input
             type="checkbox"
@@ -246,53 +245,49 @@ export default function GridMapApp() {
         </form>
 
         <h2 className="font-medium mt-4 mb-1">Current Points</h2>
-        <table className="w-full text-left border">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="p-1 border">Player</th>
-              <th className="p-1 border">X</th>
-              <th className="p-1 border">Y</th>
-              <th className="p-1 border">Type</th>
-              <th className="p-1 border">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {points.map((p) => (
-              <tr key={p.id} className="odd:bg-gray-50">
-                <td className="p-1 border">{p.name}</td>
-                <td className="p-1 border text-right">{p.x}</td>
-                <td className="p-1 border text-right">{p.y}</td>
-                <td className="p-1 border capitalize">
-                  {p.enemy
-                    ? 'enemy'
-                    : p.ally
-                    ? 'ally'
-                    : p.defender
-                    ? 'defender'
-                    : 'neutral'}
-                </td>
-                <td className="p-1 border">
-                  <button
-                    onClick={() => handleRemove(p.id)}
-                    className="text-red-600 hover:underline"
-                  >
-                    Remove
-                  </button>
-                </td>
+        <div className="max-h-64 overflow-y-auto border rounded">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="p-1 border">Player</th>
+                <th className="p-1 border">X</th>
+                <th className="p-1 border">Y</th>
+                <th className="p-1 border">Type</th>
+                <th className="p-1 border">Action</th>
               </tr>
-            ))}
-            {points.length === 0 && (
-              <tr>
-                <td colSpan="5" className="p-2 text-center text-gray-400">
-                  No points added yet.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {points.map((p) => (
+                <tr key={p.id} className="odd:bg-gray-50">
+                  <td className="p-1 border">{p.name}</td>
+                  <td className="p-1 border text-right">{p.x}</td>
+                  <td className="p-1 border text-right">{p.y}</td>
+                  <td className="p-1 border capitalize">
+                    {p.enemy ? 'enemy' : p.ally ? 'ally' : p.defender ? 'defender' : 'neutral'}
+                  </td>
+                  <td className="p-1 border">
+                    <button
+                      onClick={() => handleRemove(p.id)}
+                      className="text-red-600 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {points.length === 0 && (
+                <tr>
+                  <td colSpan="5" className="p-2 text-center text-gray-400">
+                    No points added yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
         <div className="mt-4 space-y-2">
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <button
               type="button"
               onClick={exportJson}
@@ -302,7 +297,7 @@ export default function GridMapApp() {
             </button>
             <button
               type="button"
-              onClick={importJson}
+              onClick={() => importJson()}
               className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded"
             >
               Import List
@@ -313,6 +308,38 @@ export default function GridMapApp() {
               className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
             >
               Clear All
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                const response = await fetch('/Enemies/20250615_Lions.txt');
+                if (response.ok) {
+                  const text = await response.text();
+                  setJsonData(text);
+                  importJson(text);
+                } else {
+                  alert('Failed to load Lions data');
+                }
+              }}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded"
+            >
+              Lions
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                const response = await fetch('/Enemies/20250615_Lion§.txt');
+                if (response.ok) {
+                  const text = await response.text();
+                  setJsonData(text);
+                  importJson(text);
+                } else {
+                  alert('Failed to load Lion§ data');
+                }
+              }}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded"
+            >
+              Lion§
             </button>
           </div>
           <textarea
