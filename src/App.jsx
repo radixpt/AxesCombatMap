@@ -312,7 +312,7 @@ export default function GridMapApp() {
             <button
               type="button"
               onClick={async () => {
-                const response = await fetch('/Enemies/20250615_Lions.txt');
+                const response = await fetch('/Enemies/Lions.txt');
                 if (response.ok) {
                   const text = await response.text();
                   setJsonData(text);
@@ -328,7 +328,7 @@ export default function GridMapApp() {
             <button
               type="button"
               onClick={async () => {
-                const response = await fetch('/Enemies/20250615_Lion§.txt');
+                const response = await fetch('/Enemies/Lion§.txt');
                 if (response.ok) {
                   const text = await response.text();
                   setJsonData(text);
