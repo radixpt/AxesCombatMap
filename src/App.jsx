@@ -15,18 +15,20 @@ export default function GridMapApp() {
     ally: false,
     enemy: false,
     defender: false,
+    anvil: false,
   });
   const [jsonData, setJsonData] = useState('');
   const [showNames, setShowNames] = useState(true);
 
   const pointColorMap = useMemo(() => {
     const map = new Map();
-    points.forEach(({ x, y, ally, enemy, defender, name }) => {
+    points.forEach(({ x, y, ally, enemy, defender, anvil, name }) => {
       const key = `${x},${y}`;
       let color = 'white';
       if (enemy) color = 'red';
-      else if (ally) color = 'blue';
-      else if (defender) color = 'green';
+      else if (ally) color = 'orange';
+      else if (defender) color = 'blue';
+      else if (anvil) color = "green"
       map.set(key, { color, name });
     });
     return map;
@@ -37,13 +39,16 @@ export default function GridMapApp() {
     setForm((prev) => {
       if (type === 'checkbox') {
         if (name === 'ally' && checked) {
-          return { ...prev, ally: true, enemy: false, defender: false };
+          return { ...prev, ally: true, enemy: false, defender: false, anvil:false };
         }
         if (name === 'enemy' && checked) {
-          return { ...prev, enemy: true, ally: false, defender: false };
+          return { ...prev, enemy: true, ally: false, defender: false, anvil:false };
         }
         if (name === 'defender' && checked) {
-          return { ...prev, enemy: false, ally: false, defender: true };
+          return { ...prev, enemy: false, ally: false, defender: true, anvil:false };
+        }
+        if (name === 'anvil' && checked) {
+          return { ...prev, enemy: false, ally: false, defender: false, anvil:true };
         }
         return { ...prev, [name]: checked };
       }
@@ -77,6 +82,7 @@ export default function GridMapApp() {
         ally: form.ally,
         enemy: form.enemy,
         defender: form.defender,
+        anvil:form.anvil,
       },
     ]);
     setForm({
@@ -86,6 +92,7 @@ export default function GridMapApp() {
       ally: false,
       enemy: false,
       defender: false,
+      anvil: false,
     });
   };
 
@@ -98,7 +105,7 @@ export default function GridMapApp() {
       .map(
         (p) =>
           `${p.name}|${p.x}|${p.y}|${
-            p.ally ? 'A' : p.enemy ? 'E' : p.defender ? 'D' : 'N'
+            p.ally ? 'A' : p.enemy ? 'E' : p.defender ? 'D' : p.anvil ? 'X' : 'N'
           }`
       )
       .join(',');
@@ -117,6 +124,7 @@ export default function GridMapApp() {
           ally: type === 'A',
           enemy: type === 'E',
           defender: type === 'D',
+          anvil: type === "X",
         };
       });
       setPoints(parsed);
@@ -168,6 +176,27 @@ export default function GridMapApp() {
           Show Player Names
         </label>
 
+        <label className="flex items-center gap-2 mb-2">
+          <b>Pre-load data</b>
+        </label>
+
+        <button
+              type="button"
+              onClick={async () => {
+                const response = await fetch('/Anvils/AxesAnvils.txt');
+                if (response.ok) {
+                  const text = await response.text();
+                  setJsonData(text);
+                  importJson(text);
+                } else {
+                  alert('Failed to load Anvils data');
+                }
+              }}
+              className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+            >
+              Anvils
+        </button>
+
         <form onSubmit={handleSubmit} className="space-y-2">
           <div>
             <label className="block">Player</label>
@@ -215,7 +244,7 @@ export default function GridMapApp() {
                 checked={form.ally}
                 onChange={handleChange}
               />
-              Attacker
+              Under Attack
             </label>
             <label className="flex items-center gap-1">
               <input
@@ -234,6 +263,15 @@ export default function GridMapApp() {
                 onChange={handleChange}
               />
               Defender
+            </label>
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                name="anvil"
+                checked={form.anvil}
+                onChange={handleChange}
+              />
+              Anvil
             </label>
           </div>
           <button
@@ -263,7 +301,7 @@ export default function GridMapApp() {
                   <td className="p-1 border text-right">{p.x}</td>
                   <td className="p-1 border text-right">{p.y}</td>
                   <td className="p-1 border capitalize">
-                    {p.enemy ? 'enemy' : p.ally ? 'ally' : p.defender ? 'defender' : 'neutral'}
+                    {p.enemy ? 'enemy' : p.ally ? 'under attack' : p.defender ? 'defender' : p.anvil ? 'anvil' : 'neutral'}
                   </td>
                   <td className="p-1 border">
                     <button
@@ -291,7 +329,7 @@ export default function GridMapApp() {
             <button
               type="button"
               onClick={exportJson}
-              className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+              className="bg-yellow-600 hover:bg-green-700 text-white px-3 py-1 rounded"
             >
               Export List
             </button>
@@ -309,38 +347,7 @@ export default function GridMapApp() {
             >
               Clear All
             </button>
-            <button
-              type="button"
-              onClick={async () => {
-                const response = await fetch('/Enemies/Lions.txt');
-                if (response.ok) {
-                  const text = await response.text();
-                  setJsonData(text);
-                  importJson(text);
-                } else {
-                  alert('Failed to load Lions data');
-                }
-              }}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded"
-            >
-              Lions
-            </button>
-            <button
-              type="button"
-              onClick={async () => {
-                const response = await fetch('/Enemies/Lion§.txt');
-                if (response.ok) {
-                  const text = await response.text();
-                  setJsonData(text);
-                  importJson(text);
-                } else {
-                  alert('Failed to load Lion§ data');
-                }
-              }}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded"
-            >
-              Lion§
-            </button>
+           
           </div>
           <textarea
             rows="5"
