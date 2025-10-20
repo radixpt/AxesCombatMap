@@ -12,25 +12,31 @@ export default function GridMapApp() {
     name: '',
     x: '',
     y: '',
-    ally: false,
     enemy: false,
-    defender: false,
+    hammer: false,
     anvil: false,
+  /*
+    ally: false,
+    defender: false,
     artefact: false,
+  */    
   });
   const [jsonData, setJsonData] = useState('');
   const [showNames, setShowNames] = useState(true);
 
   const pointColorMap = useMemo(() => {
     const map = new Map();
-    points.forEach(({ x, y, ally, enemy, defender, anvil, name }) => {
+    points.forEach(({ x, y,  enemy, hammer, anvil, defender,ally, name }) => {
       const key = `${x},${y}`;
       let color = 'white';
       if (enemy) color = 'red';
+      else if (hammer) color = 'purple';
+      else if (anvil) color = "green";
+      {/*
       else if (ally) color = 'orange';
       else if (defender) color = 'blue';
-      else if (anvil) color = "green";
       else if (name) color = 'purple'; 
+    */}
       map.set(key, { color, name });
     });
     return map;
@@ -40,21 +46,31 @@ export default function GridMapApp() {
     const { name, value, type, checked } = e.target;
     setForm((prev) => {
       if (type === 'checkbox') {
-        if (name === 'ally' && checked) {
-          return { ...prev, ally: true, enemy: false, defender: false, anvil:false, artefact:false };
-        }
         if (name === 'enemy' && checked) {
-          return { ...prev, enemy: true, ally: false, defender: false, anvil:false , artefact:false};
-        }
-        if (name === 'defender' && checked) {
-          return { ...prev, enemy: false, ally: false, defender: true, anvil:false , artefact:false};
+          return { ...prev, enemy: true, hammer:false , anvil:false , ally: false, defender: false , artefact:false, };
         }
         if (name === 'anvil' && checked) {
-          return { ...prev, enemy: false, ally: false, defender: false, anvil:true  , artefact:false};
+          return { ...prev, enemy: false, hammer:false,  anvil:true, ally: false, defender: false  , artefact:false};
         }
+        if (name === 'hammer' && checked) {
+          return { ...prev, enemy: false, hammer:true, anvil:false, ally: false, defender: false , artefact:false};
+        }
+
+        {/*
+        if (name === 'ally' && checked) {
+          return { ...prev, ally: true, enemy: false, defender: false, anvil:false, artefact:false, hammer:false };
+        }
+
+        if (name === 'defender' && checked) {
+          return { ...prev, enemy: false, ally: false, defender: true, anvil:false , artefact:false, hammer:false};
+        }
+
         if (name === 'artefact' && checked) {
-          return { ...prev, enemy: false, ally: false, defender: false, anvil:false , artefact:true};
+          return { ...prev, enemy: false, ally: false, defender: false, anvil:false , artefact:true, hammer:false};
         }
+        */}
+
+
 
         return { ...prev, [name]: checked };
       }
@@ -87,9 +103,10 @@ export default function GridMapApp() {
         y,
         ally: form.ally,
         enemy: form.enemy,
-        defender: form.defender,
+        hammer:form.hammer,
         anvil:form.anvil,
-        artefact:form.artefact,
+        //defender: form.defender,
+        //artefact:form.artefact,        
       },
     ]);
     setForm({
@@ -101,6 +118,7 @@ export default function GridMapApp() {
       defender: false,
       anvil: false,
       artefact: false,
+      hammer: false,
     });
   };
 
@@ -113,7 +131,7 @@ export default function GridMapApp() {
       .map(
         (p) =>
           `${p.name}|${p.x}|${p.y}|${
-            p.ally ? 'A' : p.enemy ? 'E' : p.defender ? 'D' : p.anvil ? 'X' : p.artefact ? 'R' : 'N'
+            p.ally ? 'A' : p.enemy ? 'E' : p.defender ? 'D' : p.anvil ? 'X' : p.artefact ? 'R' : p.hammer ? "H" : 'N'
           }`
       )
       .join(',');
@@ -134,6 +152,7 @@ export default function GridMapApp() {
           defender: type === 'D',
           anvil: type === "X",
           artefact: type === "R",
+          hammer: type === "H",
         };
       });
       setPoints(parsed);
@@ -209,6 +228,24 @@ export default function GridMapApp() {
         <button
               type="button"
               onClick={async () => {
+                const response = await fetch('/Hammers/Hammers.txt');
+                if (response.ok) {
+                  const text = await response.text();
+                  setJsonData(text);
+                  importJson(text);
+                } else {
+                  alert('Failed to load Artefacts data');
+                }
+              }}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded"
+            >
+              Hammers
+        </button>
+        {/*
+        <br/>      
+        <button
+              type="button"
+              onClick={async () => {
                 const response = await fetch('/Artefacts/ArtefactHolders.txt');
                 if (response.ok) {
                   const text = await response.text();
@@ -222,7 +259,7 @@ export default function GridMapApp() {
             >
               Artefacts+Anvils
         </button>
-
+        */}
         <form onSubmit={handleSubmit} className="space-y-2">
           <div>
             <label className="block">Player</label>
@@ -266,21 +303,23 @@ export default function GridMapApp() {
             <label className="flex items-center gap-1">
               <input
                 type="checkbox"
+                name="enemy"
+                checked={form.enemy}
+                onChange={handleChange}
+              />
+              Enemy
+            </label>            
+            {/*
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
                 name="ally"
                 checked={form.ally}
                 onChange={handleChange}
               />
               Under Attack
             </label>
-            <label className="flex items-center gap-1">
-              <input
-                type="checkbox"
-                name="enemy"
-                checked={form.enemy}
-                onChange={handleChange}
-              />
-              Enemy
-            </label>
+
             <label className="flex items-center gap-1">
               <input
                 type="checkbox"
@@ -290,6 +329,8 @@ export default function GridMapApp() {
               />
               Defender
             </label>
+          */}
+
             <label className="flex items-center gap-1">
               <input
                 type="checkbox"
@@ -298,18 +339,18 @@ export default function GridMapApp() {
                 onChange={handleChange}
               />
               Anvil
-            </label>
+            </label>         
             <label className="flex items-center gap-1">
               <input
                 type="checkbox"
-                name="artefact"
-                checked={form.artefact}
+                name="hammer"
+                checked={form.hammer}
                 onChange={handleChange}
               />
-              Artefact
+              Hammer
             </label>
-
           </div>
+
           <button
             type="submit"
             className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
@@ -337,7 +378,7 @@ export default function GridMapApp() {
                   <td className="p-1 border text-right">{p.x}</td>
                   <td className="p-1 border text-right">{p.y}</td>
                   <td className="p-1 border capitalize">
-                    {p.enemy ? 'enemy' : p.ally ? 'under attack' : p.defender ? 'defender' : p.anvil ? 'anvil' : p.artefact ? 'artefact' : 'neutral'}
+                    {p.enemy ? 'enemy' : p.ally ? 'under attack' : p.defender ? 'defender' : p.anvil ? 'anvil' : p.artefact ? 'artefact' : p.hammer ? 'hammer' : 'neutral'}
                   </td>
                   <td className="p-1 border">
                     <button
@@ -388,7 +429,7 @@ export default function GridMapApp() {
           <textarea
             rows="5"
             className="w-full border rounded p-1"
-            placeholder="JSON Data (name|x|y|A|E|R|N,name|x|y|A|E|R|N...)"
+            placeholder="JSON Data (name|x|y|A|E|R|N|H,name|x|y|A|E|R|N|H...)"
             value={jsonData}
             onChange={(e) => setJsonData(e.target.value)}
           />
